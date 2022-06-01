@@ -6,5 +6,6 @@
   "codeowners": ["@bdurrer"],
   "config_flow": true,
   "iot_class": "local_push",
-  "loggers": ["enocean"]
+  "loggers": ["enocean"],
+  "version": "0.0.1"
 }
