@@ -5,9 +5,18 @@ Enocean integration for homeassistant
 This custom integration regroup PRs made on the homeassistant repo.
 If you can't wait for the feature to be merged, you can go with this integration.
 
+## Features
+
 Here is the current status of the additional features it contains:
 
-- Door detector profile `D5-00-01` as a binary sensor. From homeassistant documentation, Door detector are not sensors, they are binary sensors. By puting this module into the `binary_sensor.py` file, it's now detected the right way in HA and therefor in homekit.
+- Door detector profile `D5-00-01` as a binary sensor. From homeassistant documentation, Door detector are not sensors, they are binary sensors. By puting this module into the `binary_sensor.py` file, it's now detected the right way in HA and therefor in homekit. Just make sure to add the right `device_class` like `garage_door` or just `door` in your YAML file:
+
+```
+- platform: enocean
+  name: "Entrance door"
+  id: [0x05, 0x55, 0x55, 0x73]
+  device_class: garage_door
+```
 
 - Switchs: Some logic have been added to enable profile like the `F6-02-02 - Nodon Soft Remote` to be recognised as a switch, and not as binary sensor. By doing so, we don't need to create automations to handle binary sensor events. They appear directly in HA as switchs, and therefor in homekit. This is much more cleaner.
   You can customise the switch behavior in 4 different ways:
@@ -17,12 +26,12 @@ Here is the current status of the additional features it contains:
 
   ```
   - platform: enocean
-  name: "Street room button"
+  name: "Action 1"
   id: [0x00, 0x28, 0x5D, 0x28]
   channel: 0
   behavior: onoff
   - platform: enocean
-  name: "Street room button"
+  name: "Action 2"
   id: [0x00, 0x28, 0x5D, 0x28]
   channel: 1
   behavior: onoff
@@ -32,3 +41,13 @@ Here is the current status of the additional features it contains:
 
   - push: This transform each side of the your module as a switch in HA. Meaning that pressing repetely the same button will switch on and off the HA switch. So if you have a double switch of type `F6-02-02`, this means that you can have up to 4 switchs. Which can be pretty handy.
   - button: The same has the `push` behavior except that when you release the hold on the button, the state in the HA interface will automatically turned to `off`. Can be used for cover for instance.
+
+## Installation
+
+If you have Terminal add-on installed on your Home Assistant, you can simply clone this repo directly into your `custom_components` folder:
+
+```
+git clone https://github.com/RomeHein/homeassistant_enocean
+```
+
+This other solution is to copy/paste all files from that repo into your `custom_components` folder manually.
