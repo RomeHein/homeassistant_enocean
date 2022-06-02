@@ -58,12 +58,18 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
         self._device_class = device_class
         self.which = -1
         self.onoff = -1
+        self._state = 'off'
         self._attr_unique_id = f"{combine_hex(dev_id)}-{device_class}"
 
     @property
     def name(self):
         """Return the default name for the binary sensor."""
         return self.dev_name
+
+    @property
+    def state(self):
+        """Return the default state for the binary sensor."""
+        return self._state
 
     @property
     def device_class(self):
