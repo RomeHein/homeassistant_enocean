@@ -1,4 +1,4 @@
-"""Representation of an EnOcean dongle."""
+"""This shall be the representation of an EnOcean dongle."""
 import glob
 import logging
 from os.path import basename, normpath
@@ -48,6 +48,15 @@ class EnOceanDongle:
     def _send_message_callback(self, command):
         """Send a command through the EnOcean dongle."""
         self._communicator.send(command)
+
+    def send_message(self, command):
+        """Send a command through the EnOcean dongle (public)."""
+        self._communicator.send(command)
+
+    @property
+    def communicator(self):
+        """Set the communicator."""
+        return self._communicator
 
     def callback(self, packet):
         """Handle EnOcean device's callback.

@@ -1,6 +1,6 @@
 """Support for EnOcean switches."""
 from __future__ import annotations
-
+from enocean.protocol.constants import RORG
 from enocean.utils import combine_hex
 import voluptuous as vol
 
@@ -17,6 +17,7 @@ CONF_CHANNEL = "channel"
 CONF_BEHAVIOR = "behavior"
 CONF_AVAILABLE_BEHAVIOR = ["relay", "onoff", "push", "button"]
 DEFAULT_NAME = "EnOcean Switch"
+CONF_BASE_ID = "base_id"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -24,6 +25,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_CHANNEL, default=0): cv.positive_int,
         vol.Optional(CONF_BEHAVIOR, default=CONF_AVAILABLE_BEHAVIOR[0]): vol.In(CONF_AVAILABLE_BEHAVIOR),
+        vol.Optional(CONF_BASE_ID, default=[0x00, 0x00, 0x00, 0x00]): vol.All(
+            cv.ensure_list, [vol.Coerce(int)]
+        ),
     }
 )
 
@@ -38,19 +42,21 @@ def setup_platform(
     channel = config.get(CONF_CHANNEL)
     dev_id = config.get(CONF_ID)
     dev_name = config.get(CONF_NAME)
+    base_id = config.get(CONF_BASE_ID, [0, 0, 0, 0])
     behavior = config.get(CONF_BEHAVIOR)
-    add_entities([EnOceanSwitch(dev_id, dev_name, channel, behavior)])
+    add_entities([EnOceanSwitch(dev_id, dev_name, channel, behavior, base_id)])
 
 
 class EnOceanSwitch(EnOceanEntity, SwitchEntity):
     """Representation of an EnOcean switch device."""
 
-    def __init__(self, dev_id, dev_name, channel, behavior):
+    def __init__(self, dev_id, dev_name, channel, behavior, base_id):
         """Initialize the EnOcean switch device."""
         super().__init__(dev_id, dev_name)
         self._on_state = False
         self.channel = channel
         self.behavior = behavior
+        self.base_id = base_id
         self._attr_unique_id = f"{combine_hex(dev_id)}-{behavior}-{channel}"
 
     @property
@@ -67,11 +73,16 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         """Turn on the switch."""
         if self.behavior == 'relay':
             optional = [0x03]
-            optional = [0x03]
             optional.extend(self.dev_id)
             optional.extend([0xFF, 0x00])
+            channel = self.channel & 0xFF
+            data = [RORG.VLD, 0x01]
+            data.extend([channel])
+            data.extend([0x64])
+            data.extend(self.base_id)  # append base id if given in config
+            data.extend([0x00])
             self.send_command(
-                data=[0xD2, 0x01, self.channel & 0xFF, 0x64, 0x00, 0x00, 0x00, 0x00, 0x00],
+                data=data,
                 optional=optional,
                 packet_type=0x01,
             )
@@ -83,8 +94,14 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
             optional = [0x03]
             optional.extend(self.dev_id)
             optional.extend([0xFF, 0x00])
+            channel = self.channel & 0xFF
+            data = [RORG.VLD, 0x01]
+            data.extend([channel])
+            data.extend([0x00])  # value to set: 0
+            data.extend(self.base_id)
+            data.extend([0x00])
             self.send_command(
-                data=[0xD2, 0x01, self.channel & 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+                data=data,
                 optional=optional,
                 packet_type=0x01,
             )
