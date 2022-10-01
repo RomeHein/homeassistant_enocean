@@ -1,9 +1,7 @@
 """Support for EnOcean devices."""
-import logging
-
 import voluptuous as vol
 
-from homeassistant.components.enocean import services
+from .services import async_setup_services
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
@@ -12,8 +10,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DATA_ENOCEAN, DOMAIN, ENOCEAN_DONGLE
 from .dongle import EnOceanDongle
-
-_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({vol.Required(CONF_DEVICE): cv.string})}, extra=vol.ALLOW_EXTRA
@@ -25,7 +21,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the EnOcean component."""
 
     if not hass.data.get(DOMAIN):
-        services.async_setup_services(hass)
+        async_setup_services(hass)
 
     # support for text-based configuration (legacy)
     if DOMAIN not in config:
