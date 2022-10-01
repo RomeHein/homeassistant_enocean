@@ -10,7 +10,7 @@ from enocean.communicators import Communicator
 from enocean.protocol.constants import PACKET, RORG
 from enocean.protocol.packet import Packet, UTETeachInPacket
 import voluptuous as vol
-
+import homeassistant.helpers.config_validation as cv
 from homeassistant.core import HomeAssistant, ServiceCall
 
 from .const import DOMAIN
@@ -21,18 +21,12 @@ TEACH_IN_DEVICE = "teach_in_device"  # service name
 SERVICE_CALL_ATTR_TEACH_IN_SECONDS = "teach_in_time"
 SERVICE_CALL_ATTR_TEACH_IN_SECONDS_DEFAULT_VALUE_STR = "60"
 SERVICE_CALL_ATTR_TEACH_IN_SECONDS_DEFAULT_VALUE = 60
-SERVICE_CALL_ATTR_TEACH_IN_BASE_ID_TO_USE = "teach_in_base_id"
+SERVICE_CALL_ATTR_TEACH_IN_BASE_ID_TO_USE = "base_id"
 SERVICE_CALL_TEACH_IN_SCHEMA = vol.All(
     vol.Schema(
         {
-            vol.Optional(SERVICE_CALL_ATTR_TEACH_IN_SECONDS): vol.Coerce(
-                int
-            ),  # teach in seconds
-            vol.Optional(
-                SERVICE_CALL_ATTR_TEACH_IN_BASE_ID_TO_USE
-            ): vol.All(  # base id to use
-                vol.Length(min=8, max=8)
-            ),
+            vol.Optional(SERVICE_CALL_ATTR_TEACH_IN_SECONDS): vol.Coerce(int),
+            vol.Optional(SERVICE_CALL_ATTR_TEACH_IN_BASE_ID_TO_USE): vol.All(cv.ensure_list, [vol.Coerce(int)]),
         }
     )
 )
