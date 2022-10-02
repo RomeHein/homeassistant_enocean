@@ -34,15 +34,14 @@ def int_to_list(int_value):
     return result
 
 
-def hex_to_list(hex_value):
-    """Convert hexadecimal value to a list of int values."""
-    # it FFD97F81 has to be [FF, D9, 7F, 81] => [255, 217, 127, 129]
+def hex_to_list(hex_list):
+    """Convert hexadecimal list to a list of int values."""
+    # [0xFF, 0xD9, 0x7F, 0x81] => [255, 217, 127, 129]
     result = []
-    if hex_value is None:
+    if hex_list is None:
         return result
 
-    while hex_value > 0:
-        result.append(hex_value % 0x100)
-        hex_value = hex_value // 256
+    for hex_value in hex_list:
+        result.append(int(hex_value))
     result.reverse()
     return result
