@@ -43,6 +43,7 @@ SENSOR_TYPE_HUMIDITY = "humidity"
 SENSOR_TYPE_POWER = "powersensor"
 SENSOR_TYPE_TEMPERATURE = "temperature"
 SENSOR_TYPE_WINDOWHANDLE = "windowhandle"
+SENSOR_TYPE_WINDOWHANDLE = "wallswitch"
 
 
 @dataclass
@@ -96,6 +97,12 @@ SENSOR_DESC_WINDOWHANDLE = EnOceanSensorEntityDescription(
     unique_id=lambda dev_id: f"{combine_hex(dev_id)}-{SENSOR_TYPE_WINDOWHANDLE}",
 )
 
+SENSOR_DESC_WALLSWITCH = EnOceanSensorEntityDescription(
+    key=SENSOR_TYPE_WALLSWITCH,
+    name="WallSwitch",
+    icon="mdi:remote-tv",
+    unique_id=lambda dev_id: f"{combine_hex(dev_id)}-{SENSOR_TYPE_WALLSWITCH}",
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -147,6 +154,9 @@ def setup_platform(
 
     elif sensor_type == SENSOR_TYPE_WINDOWHANDLE:
         entities = [EnOceanWindowHandle(dev_id, dev_name, SENSOR_DESC_WINDOWHANDLE)]
+
+    elif sensor_type == SENSOR_TYPE_WALLSWITCH:
+        entities = [EnOceanWallSwitch(dev_id, dev_name, SENSOR_DESC_WALLSWITCH)]
 
     if entities:
         add_entities(entities)
@@ -272,13 +282,47 @@ class EnOceanWindowHandle(EnOceanSensor):
 
     def value_changed(self, packet):
         """Update the internal state of the sensor."""
-        action = (packet.data[1] & 0x70) >> 4
+        action = packet.data[1]
 
-        if action == 0x07:
+        if action == 0xF0:
             self._attr_native_value = STATE_CLOSED
-        if action in (0x04, 0x06):
+        if action in (0xE0, 0xC0):
             self._attr_native_value = STATE_OPEN
-        if action == 0x05:
+        if action == 0xD0:
             self._attr_native_value = "tilt"
+        if action == 0x00:
+            self._attr_native_value = "anomaly"
+
+        self.schedule_update_ha_state()
+
+
+class EnOceanWallSwitch(EnOceanSensor):
+    """Representation of an EnOcean wall switch.
+    EEPs (EnOcean Equipment Profiles):
+    - F6-10-00 
+    """
+
+    def value_changed(self, packet):
+        """Update the internal state of the sensor."""
+        action = packet.data[1]
+
+        if action == 0x00:
+            self._attr_native_value = "release"
+        if action == 0x30:
+            self._attr_native_value = "BP1"
+        if action == 0x10:
+            self._attr_native_value = "BP2"
+        if action == 0x70:
+            self._attr_native_value = "BP3"
+        if action == 0x50:
+            self._attr_native_value = "BP4"
+        if action == 0x37:
+            self._attr_native_value = "BP1+3"
+        if action == 0x15:
+            self._attr_native_value = "BP2+4"
+        if action == 0x17:
+            self._attr_native_value = "BP2+3"
+        if action == 0x35:
+            self._attr_native_value = "BP1+4"
 
         self.schedule_update_ha_state()
